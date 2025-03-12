@@ -4,19 +4,23 @@ import { onMount } from 'svelte';
   import { complexPow, complexAbs, complexSub, getRandomInt } from '../lib/utils';
 
   function asyncFor(start, len, callback){
-  return new Promise((resolve) => {
-    let i = start;
-    function iterate() {
-      if (i < len) {
-        callback(i);
-        i++;
-        setTimeout(iterate, 0);
-      } else {
-        resolve();
-      }
-    }
-    iterate();
-  });
+    return new Promise((resolve) => {
+        let i = start;
+        function iterate() {
+            if (i < len && isRendering) {
+                callback(i);
+                i++;
+                setTimeout(iterate, 0);
+            } else {
+                resolve();
+            }
+        }
+        if (isRendering) {
+            iterate();
+        } else {
+            resolve();
+        }
+    });
 }
 
 
@@ -249,15 +253,7 @@ import { onMount } from 'svelte';
 
   function CancelRender() {
     isRendering = false;
-    if (divergence_map && divergence_map.length > 0) {
-      let xAsync = divergence_map[0];
-      let yAsyncs = divergence_map[1];
-      clearInterval(xAsync);
-      yAsyncs.forEach((yAsync) => {
-        clearInterval(yAsync);
-      });
-    }
-  }
+}
 
   function startRender() {
     CancelRender();
