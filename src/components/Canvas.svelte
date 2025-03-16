@@ -9,6 +9,9 @@
 
   import type { AppActionsType } from "../types";
 
+  let renderStartTime: number = 0;
+  let renderEndTime: number = 0;
+
   export let appState: any;
   export let appActions: AppActionsType;
 
@@ -110,15 +113,27 @@
   ): Promise<void> {
     return new Promise<void>((resolve) => {
       let i = start;
+
       function iterate() {
-        if (i < len && $appState.isRendering) {
+        // 더 많은 반복을 한 번에 처리하여 성능 향상
+        const batchSize = 10; // 한 번에 처리할 항목 수
+        let count = 0;
+
+        while (i < len && count < batchSize && $appState.isRendering) {
           callback(i);
           i++;
+          count++;
+        }
+
+        if (i < len && $appState.isRendering) {
+          // 아직 처리할 항목이 남아있고 렌더링 중이면 다음 배치 예약
           setTimeout(iterate, 0);
         } else {
+          // 모든 항목 처리 완료 또는 렌더링 중단됨
           resolve();
         }
       }
+
       if ($appState.isRendering) {
         iterate();
       } else {
@@ -154,6 +169,9 @@
     resetCanvas();
     // appActions.startRender(); // appActions.updateValue('isRendering', true);
 
+    renderStartTime = performance.now();
+    console.log("Rendering started", renderStartTime);
+
     divergence_map = computeTetrationDivergence(
       nx,
       ny,
@@ -177,122 +195,90 @@
 
     ctx = canvas.getContext("2d");
 
-    let xAsync: Promise<void>;
     let yAsyncs: Promise<void>[] = [];
-    if ($appState.fastRender) {
-      // 랜덤 좌표를 사용하여 빠르게 렌더링
-      xAsync = asyncFor(0, nx * 4, (_) => {
-        let yAsync = asyncFor(0, ny * 4, (_) => {
-          let r_x = getRandomInt(0, nx);
-          let r_y = getRandomInt(0, ny);
+    let allPromises: Promise<void>[] = [];
 
-          let c_x = a1 + r_x * d;
-          let c_y = b1 + r_y * e;
+    // x축 처리 Promise 생성
+    const xAsync = asyncFor(0, nx, (i) => {
+      // y축 처리를 위한 Promise 생성
+      const yAsync = asyncFor(0, ny, (j) => {
+        if (!$appState.isRendering) return; // 렌더링 중단 확인
 
-          // 캐시된 결과 확인
-          const cachedResult = getCachedResult(
-            c_x,
-            c_y,
-            max_iter,
-            threshold,
-            escape_radius
-          );
+        let c_x = a1 + i * d;
+        let c_y = b1 + j * e;
 
-          if (cachedResult !== undefined && ctx) {
-            ctx.fillStyle = cachedResult ? "white" : "black";
-            ctx.fillRect(r_x, r_y, 1, 1);
-          } else if (ctx) {
-            // 새로운 결과 계산
-            let c_val = [c_x, c_y];
-            let z = [c_x, c_y];
+        // 캐시된 결과 확인
+        const cachedResult = getCachedResult(
+          c_x,
+          c_y,
+          max_iter,
+          threshold,
+          escape_radius
+        );
 
-            ctx.fillStyle = "black";
-            ctx.fillRect(r_x, r_y, 1, 1);
+        if (cachedResult !== undefined && ctx) {
+          ctx.fillStyle = cachedResult ? "white" : "black";
+          ctx.fillRect(i, j, 1, 1);
+        } else if (ctx) {
+          // 새로운 결과 계산
+          let c_val = [c_x, c_y];
+          let z = [c_x, c_y];
 
-            let result = false; // false = black, true = white
+          ctx.fillStyle = "black";
+          ctx.fillRect(i, j, 1, 1);
 
-            let prev_z = z;
-            for (let k = 0; k < max_iter; k++) {
-              z = complexPow(c_val, z);
-              if (complexAbs(z) > escape_radius) {
-                // 발산
-                ctx.fillStyle = "white";
-                ctx.fillRect(r_x, r_y, 1, 1);
-                result = true;
-                break;
-              }
-              if (complexAbs(complexSub(z, prev_z)) < threshold) {
-                // 수렴
-                ctx.fillStyle = "black";
-                ctx.fillRect(r_x, r_y, 1, 1);
-                result = false;
-                break;
-              }
-              prev_z = z;
+          let result = false; // false = black, true = white
+
+          let prev_z = z;
+          for (let k = 0; k < max_iter; k++) {
+            z = complexPow(c_val, z);
+            if (complexAbs(z) > escape_radius) {
+              // 발산
+              ctx.fillStyle = "white";
+              ctx.fillRect(i, j, 1, 1);
+              result = true;
+              break;
             }
-
-            // 결과 캐싱
-            cacheResult(c_x, c_y, max_iter, threshold, escape_radius, result);
-          }
-        });
-        yAsyncs.push(yAsync);
-      });
-    } else {
-      // 기존의 렌더링 방식
-      xAsync = asyncFor(0, nx, (i) => {
-        let yAsync = asyncFor(0, ny, (j) => {
-          let c_x = a1 + i * d;
-          let c_y = b1 + j * e;
-
-          // 캐시된 결과 확인
-          const cachedResult = getCachedResult(
-            c_x,
-            c_y,
-            max_iter,
-            threshold,
-            escape_radius
-          );
-
-          if (cachedResult !== undefined && ctx) {
-            ctx.fillStyle = cachedResult ? "white" : "black";
-            ctx.fillRect(i, j, 1, 1);
-          } else if (ctx) {
-            // 새로운 결과 계산
-            let c_val = [c_x, c_y];
-            let z = [c_x, c_y];
-
-            ctx.fillStyle = "black";
-            ctx.fillRect(i, j, 1, 1);
-
-            let result = false; // false = black, true = white
-
-            let prev_z = z;
-            for (let k = 0; k < max_iter; k++) {
-              z = complexPow(c_val, z);
-              if (complexAbs(z) > escape_radius) {
-                // 발산
-                ctx.fillStyle = "white";
-                ctx.fillRect(i, j, 1, 1);
-                result = true;
-                break;
-              }
-              if (complexAbs(complexSub(z, prev_z)) < threshold) {
-                // 수렴
-                ctx.fillStyle = "black";
-                ctx.fillRect(i, j, 1, 1);
-                result = false;
-                break;
-              }
-              prev_z = z;
+            if (complexAbs(complexSub(z, prev_z)) < threshold) {
+              // 수렴
+              ctx.fillStyle = "black";
+              ctx.fillRect(i, j, 1, 1);
+              result = false;
+              break;
             }
-
-            // 결과 캐싱
-            cacheResult(c_x, c_y, max_iter, threshold, escape_radius, result);
+            prev_z = z;
           }
-        });
-        yAsyncs.push(yAsync);
+
+          // 결과 캐싱
+          cacheResult(c_x, c_y, max_iter, threshold, escape_radius, result);
+        }
       });
-    }
+
+      yAsyncs.push(yAsync);
+      allPromises.push(yAsync);
+    });
+
+    allPromises.push(xAsync);
+
+    // 모든 Promise 관리를 위한 단일 Promise 생성
+    const allRendering = Promise.all(allPromises);
+
+    // 렌더링 완료 모니터링
+    allRendering
+      .then(() => {
+        console.log("모든 렌더링 작업 완료!");
+        if ($appState.isRendering) {
+          renderEndTime = performance.now();
+          const renderTime = ((renderEndTime - renderStartTime) / 1000).toFixed(
+            2
+          );
+          console.log(`렌더링 완료: ${renderTime}초 소요됨`);
+        }
+      })
+      .catch((error) => {
+        console.error("렌더링 중 오류 발생:", error);
+        appActions.updateValue("isRendering", false);
+      });
 
     // 필요시 캐시 정리
     clearCacheIfNeeded();
