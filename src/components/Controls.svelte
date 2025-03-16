@@ -18,6 +18,7 @@
   let thresholdValue: number;
   let fastRenderValue: boolean;
   let useCachingValue: boolean;
+  let batchSizeValue: number;
 
   // 계산된 값들
   $: eps_y = $appState.eps * ($appState.ratio_y / $appState.ratio_x);
@@ -48,6 +49,7 @@
     thresholdValue = $appState.threshold;
     fastRenderValue = $appState.fastRender;
     useCachingValue = $appState.useCaching;
+    batchSizeValue = $appState.batchSize;
   }
 
   // 각 필드별 값 업데이트 함수들
@@ -93,6 +95,10 @@
 
   function updateUseCaching(value: boolean) {
     appActions.updateValue("useCaching", value);
+  }
+
+  function updateBatchSize() {
+    appActions.updateValue("batchSize", batchSizeValue);
   }
 
   // 비율 변경 적용
@@ -291,6 +297,15 @@
       <div class="input-group">
         <label for="cache_size">Cache Size</label>
         <input id="cache_size" disabled value={cacheSize} type="number" />
+      </div>
+      <div class="input-group">
+        <label for="batch_size">batchSize</label>
+        <input 
+          id="batch_size" 
+          bind:value={batchSizeValue}
+          on:change={updateBatchSize}
+          type="number" 
+        />
       </div>
     </div>
   </details>

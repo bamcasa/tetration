@@ -116,10 +116,9 @@
 
       function iterate() {
         // 더 많은 반복을 한 번에 처리하여 성능 향상
-        const batchSize = 10; // 한 번에 처리할 항목 수
         let count = 0;
 
-        while (i < len && count < batchSize && $appState.isRendering) {
+        while (i < len && count < $appState.batchSize && $appState.isRendering) {
           callback(i);
           i++;
           count++;

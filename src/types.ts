@@ -8,6 +8,7 @@ type AppStateType = {
   max_iter: number;
   escape_radius: number;
   threshold: number;
+  batchSize: number;
   isDarkMode: boolean;
   isRendering: boolean;
   fastRender: boolean;

@@ -22,6 +22,7 @@
     max_iter: 500,
     escape_radius: 1e10,
     threshold: 1e-10,
+    batchSize: 10,
     isDarkMode: true,
     isRendering: false,
     fastRender: false,
@@ -54,10 +55,10 @@
       });
     },
     updateValue: (key: keyof AppStateType, value: any) => {
-      // console.log(`${key} 업데이트:`, value);
+      console.log(`${key} 업데이트:`, value);
       appState.update((state) => {
         const newState = { ...state, [key]: value };
-        // console.log("새 상태:", newState);
+        console.log("새 상태:", newState);
         return newState;
       });
     },
