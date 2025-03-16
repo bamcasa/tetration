@@ -1,5 +1,3 @@
-
-// fastPow를 사용할지 여부를 결정하는 플래그 (정수 지수일 때만 사용하는 것이 안전)
 const useFastPow = true;
 
 function fastPow(x: number, y: number): number {
@@ -35,28 +33,24 @@ function complexPow(c: number[], z: number[]): number[] {
   // 각도 계산 및 보정
   let angle = y * logR + x * theta;
   angle = angle % (2 * Math.PI);
-
-  // 지수 계산 오차 보정
-  // 작은 값은 0으로 처리
+  
   const factor = rPowX * Math.exp(-y * theta);
 
-  return [factor * Math.cos(angle), factor * Math.sin(angle),];
+  return [factor * Math.cos(angle), factor * Math.sin(angle)];
 }
-
 
 function complexAbs(z: number[]): number {
   return Math.sqrt(z[0] * z[0] + z[1] * z[1]);
 }
 
-function complexSub(a : number[], b: number[]): number[] {
+function complexSub(a: number[], b: number[]): number[] {
   return [a[0] - b[0], a[1] - b[1]];
 }
 
-function getRandomInt(min : number, max: number): number {
+function getRandomInt(min: number, max: number): number {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export { complexPow, complexAbs, complexSub , getRandomInt };
-
+export { complexPow, complexAbs, complexSub, getRandomInt };
