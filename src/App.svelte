@@ -27,33 +27,33 @@
   // 공통 상태 업데이트 함수들
   const appActions: AppActionsType = {
     startRender: () => {
-      console.log("렌더링 시작(isRendering: true)");
+      // console.log("렌더링 시작(isRendering: true)");
       appState.update(state => {
         const newState = { ...state, isRendering: true };
-        console.log("새 상태:", newState);
+        // console.log("새 상태:", newState);
         return newState;
       });
     },
     cancelRender: () => {
-      console.log("렌더링 취소(isRendering: false)");
+      // console.log("렌더링 취소(isRendering: false)");
       appState.update(state => {
         const newState = { ...state, isRendering: false };
-        console.log("새 상태:", newState);
+        // console.log("새 상태:", newState);
         return newState;
       });
     },
     toggleDarkMode: () => {
       appState.update(state => {
         const newState = { ...state, isDarkMode: !state.isDarkMode };
-        console.log("다크모드 토글:", newState.isDarkMode);
+        // console.log("다크모드 토글:", newState.isDarkMode);
         return newState;
       });
     },
     updateValue: (key: keyof AppStateType, value: any) => {
-      console.log(`${key} 업데이트:`, value);
+      // console.log(`${key} 업데이트:`, value);
       appState.update(state => {
         const newState = { ...state, [key]: value };
-        console.log("새 상태:", newState);
+        // console.log("새 상태:", newState);
         return newState;
       });
     }

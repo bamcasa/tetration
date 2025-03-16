@@ -109,7 +109,7 @@
     appActions.updateValue('useCaching', false);
     setTimeout(() => {
       appActions.updateValue('useCaching', true);
-      console.log("캐시 정리 완료");
+      // console.log("캐시 정리 완료");
     }, 100);
   }
   

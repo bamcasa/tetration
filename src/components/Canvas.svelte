@@ -60,7 +60,7 @@
 
   function clearCacheIfNeeded(maxSize = 1000000): void {
     if (resultsCache.size > maxSize) {
-      console.log(`Clearing cache (size: ${resultsCache.size})`);
+      // console.log(`Clearing cache (size: ${resultsCache.size})`);
       resultsCache.clear();
     }
   }
@@ -68,7 +68,7 @@
   // Exported for potential external use
   export function clearCache(): void {
     resultsCache.clear();
-    console.log("Cache cleared");
+    // console.log("Cache cleared");
   }
   // 비동기 반복 함수
   function asyncFor(start: number, len: number, callback: (idx: number) => void): Promise<void> {
@@ -104,7 +104,7 @@
       ctx.fillStyle = '#808080';
     }
     ctx.fillRect(0, 0, nx, ny);
-    console.log("Canvas reset");
+    // console.log("Canvas reset");
   }
   
   // 렌더링 취소
