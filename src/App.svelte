@@ -7,6 +7,8 @@
 
   import type { AppStateType, AppActionsType } from "./types";
 
+  import { initWasm } from "./lib/utils";
+
   // 상태를 저장소(store)로 관리
   const appState = writable<AppStateType>({
     x0:
@@ -22,7 +24,7 @@
     max_iter: 500,
     escape_radius: 1e10,
     threshold: 1e-10,
-    batchSize: 10,
+    batchSize: 1,
     isDarkMode: true,
     isRendering: false,
     fastRender: false,
@@ -69,6 +71,11 @@
       appActions.updateValue("n", window.innerWidth - 16);
     }
   });
+
+  onMount(async () => {
+    await initWasm();
+  });
+
 </script>
 
 <div class="container">
